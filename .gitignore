@@ -1,0 +1,30 @@
+# backend
+.classpath
+.java-version
+.project
+.mvn
+.settings
+target
+clone/
+
+# backend-cpp/
+build/
+vcpkg/
+.cache/
+
+# Frontend
+frontend/node_modules
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage
+frontend/build
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+.idea
+.vscode
+.DS_Store
+
+# Packaging
+challenge-*.zip
+deploying/working
