@@ -1,0 +1,61 @@
+.SearchBar input {
+  width: 500px;
+  font-size: 20px;
+  padding: 12px;
+  border: none;
+}
+
+.SearchBar button {
+  background-color: lightgray;
+  width: 60px;
+  font-size: 20px;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 12px;
+  border: none;
+}
+
+.SearchBar .suggestions {
+  text-align: left;
+  color: black;
+  position: absolute;
+  width: 524px;
+  border-top: 1px solid lightgray;
+  background-color: white;
+}
+
+.SearchBar .suggestions div:hover {
+  background-color: lightgrey;
+}
+
+.SearchBar .suggestions div {
+  cursor: pointer;
+  font-size: 20px;
+  padding: 6px 0px 6px 12px;
+}
+
+.ResultList {
+  width: 100%;
+}
+
+.ResultList ol {
+  padding: 25px;
+}
+.ResultList li {
+  height: 100px;
+  background-color: brown;
+  padding: 10px;
+  list-style: none;
+  border: 1px solid;
+}
+
+.ResultList img {
+  height: 100px;
+  width: 100px;
+  display: block;
+  float: left;
+}
+
+.ResultList span {
+  display: block;
+}
