@@ -11,15 +11,6 @@
 - The file **cities_canada-usa.tsv** is read in-memory everytime the endpoint is called. The file
 size is 1.1 MB. We could improve performance by only reading the fil in-memory once, either the
 first time the endpoint is called (lazy initialization) or on the app startup.
-- Our city object has a lot of fields that are not currently being used. Do we really need them?
-  Can we get rid of them? Subsequently, do we need them in the **cities_canada-usa.tsv** file?
-- CsvParser print the stack trace if there's an error while reading the data file. As mentioned
-  before, logs should be configurable (different log destination depending on environment).
-- If CsvParser fails to read the file, it returns an empty hashMap which cause the endpoint
-  to return a 200 OK response with an empty result. I feel it is misleading since an error actually 
-  occured and we have no way to know it and the app gives the impression that everything worked 
-  fine and that there were just no cities matching the user query. The endpoint should return a 500
-  so that a monitoring tool can pick up the issue. The user should also know an error occured.
 
 ## Lazy Initialization
 
@@ -67,4 +58,14 @@ public class FileRepository {
     }
 }
 ```
+
+- Our city object has a lot of fields that are not currently being used. Do we really need them?
+  Can we get rid of them? Subsequently, do we need them in the **cities_canada-usa.tsv** file?
+- CsvParser print the stack trace if there's an error while reading the data file. As mentioned
+  before, logs should be configurable (different log destination depending on environment).
+- If CsvParser fails to read the file, it returns an empty hashMap which cause the endpoint
+  to return a 200 OK response with an empty result. I feel it is misleading since an error actually 
+  occured and we have no way to know it and the app gives the impression that everything worked 
+  fine and that there were just no cities matching the user query. The endpoint should return a 500
+  so that a monitoring tool can pick up the issue. The user should also know an error occured.
 
