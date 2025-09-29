@@ -8,7 +8,36 @@
     to be 1 and the last page to be be totalNumberOfPages.
 - Allow users to specify latitude and longitude precision.
   - Right now, latitude and longitude precision is hardcoded. It would be nice to make these default
-    values but to allow to user to pass the precision they want. 
+    values but to allow to user to pass the precision they want.
+- Separate the data source from the application.
+  - The file **cities_canada-usa.tsv** currently lives with the application. That means that    
+    updating it requires updating the application. We could put the file in a blob storage or a
+    S3 bucket. That way we could update it without touching the application. We could also add a webhook
+    in the application to be notified when the file changes so that it reloads in-memory. The file is unlikely
+    to change often.
+- Do not provide default value for latitude/longitude.
+  - Because of the default values, not all possible values are returned. Because of that, we do not support 
+    the use case where a user wants to find all canadian and american cities matching the query "mont". To support
+    that use case, we should remove the default value latitude/longitude and just returned all matched values if
+    these parameters are not provided.
+- Support fuzzy search.
+  - Allow users to still find matching cities even in the presence of typos or mispelling.
+- Support case-insensitive search.
+- Add country filtering.
+  - Search only in Canada or only in the US. Returns an error for some other country.
+- Support prefix match.
+  - Would probably require using a trie data structure for efficient searching.
+- Add ranking.
+  - Depending on what we think would be most valuable to user, the response could be ranked based on population size,
+    closeness to latitude/longitude, exact match followed by prefix match or substring match, maybe ordered alphabetically.
+    We could also allow the user to pass in a parameter that determins the ranking. Not sure how useful that would be, we could
+    see if there's an actual user needs for that.
+- Add page size.
+  - Allow user to specify page size in query and support a default value.
+- Add a GraphQL endpoint to retrieve subset of data.
+  - Looking at how the data is used in the frontend, we could return only a subset of the data instead of the whole city object.
+- Add support for French characters.
+  - The API does not seem to support search for cities like "Montréal" or "Québec". 
 
 
 
@@ -18,9 +47,25 @@
   - The /suggestions endpoint allow any domain in the browser to use javascript to fetch data from
     our endpoint. Is that what we want in practice? Is the API supposed to be public or is it
     an internal api where the frontend is the public interface? In that case, we should probably change our CORS rule to the domain of the frontend app. We might want to use an environment variable that could have different values depending on whether we are running it on a dev environment, qa or prod. If the api is public, we can leave it as is especially since we are not serving sensitive data.
+- Add authentication & authorization (optional)
+  - If the API is supposed to be called only by some services or some users, then we should add an authentication and authorization mechanism (maybe API key or JWT for users and JWT or mTLS for services).
+- Add rate limiting to the endpoint.
+  - By IP address if the API is public or if we just don't care who access it. If the API is private and should be called only
+    by some specific services or users
+
+
+## Observability
 - Add proper logging.
   - Right now, we are writing log to the console only. It would be good to change the code to allow
     many different log destination (console, file, event log, sentry, splunk, application insights) depending on the environment (dev, qa, prod).
+- Add in-app metrics.
+  - time spent for query lookup
+  - time spent for geo localization lookup
+  - time spent for serialization
+  - cache efficiency (cache hit, cache miss)
+- Add Spring Boot Actuator to monitor system health.
+  - The endpoint should not be accessible to public users and maybe protected with specific security role.
+
 
 ## Performance
 
@@ -28,6 +73,13 @@
   - The file **cities_canada-usa.tsv** is read in-memory everytime the endpoint is called. The file
   size is 1.1 MB. We could improve performance by only reading the fil in-memory once, either the
   first time the endpoint is called (lazy initialization) or on the app startup.
+- Add support for browser caching.
+  - The endpoint currently does not allow for browser caching on url query string. If a client send multiple times the same   request, we will process the request each time. If we add support for caching, the browser will cache the result for a given time priod and we won't have to reprocess it. By browser caching support, we mean
+  ETag and Cache-Control.
+- Add support for server caching.
+  - We could use in-memory cache using the query, latitude and longitude as key to avoid searching through the data everytime.
+    We could force cache eviction of all data when the data source change, otherwise just keep the data in the cache.
+
 
 ### Lazy Initialization
 
@@ -76,7 +128,7 @@ public class FileRepository {
 }
 ```
 
-## Code Design
+## Design
 
 - Remove unused city fields.
   - Our city object has a lot of fields that are not currently being used. Do we really need them?
@@ -92,6 +144,13 @@ public class FileRepository {
     will be localized inside the repository.
 - Move filtering logic inside CityRepository class.
   - The filtering logic is pretty much something we find in database (e.g: LIKE %<some-string>% WHERE latitude > <some-value>) so it would makes sense to have that logic directly in the CityRepository class.
+- Change Content type from plain/text to application/json.
+  - The endpoint currently returns a text/plain response, even though the string is an actual json object.
+    According to RFC 8259, JSON responses should be served with application/json. Moreover, it may break third
+    party integrations that expect the proper MIME type or APIs that use the ACCEPT header may fail if the response is
+    not application/json.
+- Add versioning.
+  - The api does not support version right now. As we add new features, it would be necessary to have it.
 
 
 
@@ -112,6 +171,10 @@ public class FileRepository {
     can validate, page should not be less than 0 or higher than MAX_PAGE. Right now, the code will
     pretty much just return an empty result but we can provide a more useful message to the user so
     that they understand how to use the api.
+- Log and throw an error if csv file is read and parsed correctly but the city hashMap is empty.
+  - Right now, the code will execute correctly if the data file is read and parsed correctly but it 
+  contains nothing. Having an empty file is probably not something we want so we should throw an error
+  so that we can notify of that issue and potentially prevent the app from initializing.
 
 
 ## Testability
