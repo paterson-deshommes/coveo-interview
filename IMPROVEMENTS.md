@@ -34,9 +34,11 @@
 
 ### Frontend
 - Allow users to specify latitude and longitude.
+- Support https.
 
 ### Backend
 
+- Support https.
 - Add proper logging.
   - Right now, we are writing log to the console only. It would be good to change the code to allow
     many different log destination (console, file, event log, sentry, splunk, application insights) depending on the environment (dev, qa, prod).
